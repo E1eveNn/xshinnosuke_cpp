@@ -1,9 +1,9 @@
 #include<iostream>
-#include "shape.h"
-#include "core.h"
-#include "linear.h"
+#include "layers/linear.h"
 #include "models.h"
-#include "functional.h"
+#include "nn/functional.h"
+#include "nn/objectives.h"
+#include "nn/optimizers.h"
 #include<vector>
 
 using namespace std;
@@ -11,20 +11,22 @@ using namespace std;
 
 class myNet : public Module {
 public:
-	myNet() {
-		this->fc1 = new Linear(500);
+	myNet(int n_classes) {
+		this->fc1 = new Linear(10);
 		this->relu1 = new ReLU();
-		this->fc2 = new Linear(100);
+		this->fc2 = new Linear(5);
 		this->relu2 = new ReLU();
-		this->fc3 = new Linear(10);
+		this->fc3 = new Linear(n_classes, "sigmoid");
+
 	};
-	Variable* forward(Variable* x, bool is_training) {
+	Variable* forward(Variable* x) {
 		Variable* out;
-		out = (*(this->fc1))(x, is_training);
-		out = (*(this->relu1))(out, is_training);
-		out = (*(this->fc2))(out, is_training);
-		out = (*(this->relu2))(out, is_training);
-		out = (*(this->fc3))(out, is_training);
+		out = (*(this->fc1))(x);
+		out = (*(this->relu1))(out);
+		out = (*(this->fc2))(out);
+		out = (*(this->relu2))(out);
+		out = (*(this->fc3))(out);
+		out = sigmoid(out);
 		return out;
 	}
 	
@@ -33,40 +35,42 @@ public:
 	Layer* fc2;
 	Layer* relu2;
 	Layer* fc3;
+
 };
 
 
+
+
 int main() {
-	/*Shape s1({ 1 });
-	Shape s2({ 3, 2, 5, 7 });
-	
-	cout << "s1: " << s1 << endl;
-	cout << "s2: " << s2 << endl;
-	cout << (s1 == s2);*/
 
 
-	Eigen::MatrixXf x = Eigen::MatrixXf::Random(10, 784);
-	Variable* inputs = new Variable(x);
+	Eigen::MatrixXf x = Eigen::MatrixXf::Random(10, 10);
+	Variable* inputs = new Variable(&x);
+	inputs->requires_grad_(true);
+	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(10, 1);
+	for (int i = 0; i < 10; ++i) {
+		for (int j = 0; j < 1; ++j) {
+			float n = (rand() % 10) / 10;
+			if (n >= 0.5) {
+				y(i, j) = 1;
+			}
+		}
+	}
+	Variable* target = new Variable(&y);
 
-	//Eigen::MatrixXf y = Eigen::MatrixXf::Random(4, 2);
-	//Variable* weight = new Variable(y);
+	myNet net = myNet(1);
+	Objective* criterion = new BinaryCrossEntropy();
+	Optimizer* optimizer = new SGD(net.parameters());
 
-	//inputs->requires_grad = true;
-	//weight->requires_grad = true;
-
-	////// cout << n1;
-	//Variable* out1 = dense(inputs, weight);
-	//cout << out1 << endl;
-	//Variable* out2 = relu(out1);
-	//cout << out2 << endl;
-	//out2->zero_grad();
-	//out2->grad.fill(1);
-	//cout << "1.out1's grad:" << out1->grad << endl;
-	//out2->grad_fn(out2);
-	//cout << "2.out1's grad:" << out1->grad << endl;
-	//out1->grad_fn(out1);
-
-	auto net = myNet();
-	Variable* out = net(inputs);
-	cout << out << endl;
+	int EPOCH = 10;
+	for (int epoch = 0; epoch < EPOCH; ++epoch) {
+		optimizer->zero_grad();
+		Variable* out = net(inputs);
+		Variable* loss = (*criterion)(out, target);
+		float acc = criterion->acc(out, target);
+		cout << "iter: " << epoch <<" loss: " << loss->item() << " acc: " << 
+			criterion->acc(out, target) << endl;
+		loss->backward();
+		optimizer->step();
+	}
 }

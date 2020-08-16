@@ -1,7 +1,5 @@
 #pragma once
-#include  "core.h"
 #include "grad_fn.h"
-#include "toolkit.h"
 #include<vector>
 using namespace std;
 
@@ -32,3 +30,5 @@ Variable* sigmoid(Variable* inputs, bool is_training = true, const string& name 
 Variable* tanh(Variable* inputs, const string& name = "");
 // softmax
 Variable* softmax(Variable* inputs, const string& name = "");
+
+void initialize_variables_grad(const initializer_list<Variable*>& l, bool is_training);

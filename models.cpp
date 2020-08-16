@@ -4,22 +4,22 @@ using namespace std;
 
 
 Base::Base() {
-	this->is_training = true;
+	this->variables = vector<Variable*>();
+	this->trainable_variables = vector<Variable*>();
 }
 
 
 void Base::train() {
-	this->is_training = true;
+	GlobalGraph::IS_TRAINING = true;
 }
 
 void Base::eval() {
-	this->is_training = false;
+	GlobalGraph::IS_TRAINING = false;
 }
 
 
 Module::Module() {
-	this->variables = vector<Variable*> ();
-	this->trainable_variables = vector<Variable*> ();
+
 }
 
 void Module::collect_variables(Variable* x) {
@@ -31,7 +31,8 @@ void Module::collect_variables(Variable* x) {
 		queue.pop_back();
 		for (auto n = vertex->out_bounds.begin(); n != vertex->out_bounds.end(); ++n) {
 			if (seen.count(*n) == 0) {
-				for (auto v = (*n)->in_bounds.begin(); v != (*n)->in_bounds.end(); ++v) {
+				auto params = (*n)->get_parameters();
+				for (auto v = params.begin(); v != params.end(); ++v) {
 					this->variables.push_back(*v);
 					if ((*v)->requires_grad)
 						this->trainable_variables.push_back(*v);
@@ -45,11 +46,11 @@ void Module::collect_variables(Variable* x) {
 }
 
 Variable* Module::operator()(Variable* x) {
-	Variable* outputs = this->forward(x, this->is_training);
+	Variable* outputs = this->forward(x);
 	this->collect_variables(x);
 	return outputs;
 }
 
-vector<Variable*>& Module::parameters() {
-	return this->variables;
+vector<Variable*>* Module::parameters() {
+	return &(this->variables);
 }

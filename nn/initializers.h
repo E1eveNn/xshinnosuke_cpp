@@ -1,6 +1,6 @@
 #pragma once
 #include "core.h"
-#include "shape.h"
+#include "../utils/shape.h"
 
 
 class Initializer {

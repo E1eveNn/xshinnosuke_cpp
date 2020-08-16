@@ -2,7 +2,8 @@
 
 
 Variable* Zeros::operator()(int rows, int cols) {
-	Eigen::MatrixXf out = Eigen::MatrixXf::Zero(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setZero();
 	return new Variable(out);
 }
 
@@ -11,7 +12,8 @@ Variable* Zeros::operator()(const Shape& shape) {
 	int cols = shape[1];*/
 	int rows = shape.data[0];
 	int cols = shape.data[1];
-	Eigen::MatrixXf out = Eigen::MatrixXf::Zero(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setZero();
 	return new Variable(out);
 }
 
@@ -22,26 +24,30 @@ Variable* Zeros::operator()(const Shape& shape) {
 
 
 Variable* Ones::operator()(int rows, int cols) {
-	Eigen::MatrixXf out = Eigen::MatrixXf::Ones(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setOnes();
 	return new Variable(out);
 }
 
 Variable* Ones::operator()(const Shape& shape) {
 	int rows = shape.data[0];
 	int cols = shape.data[1];
-	Eigen::MatrixXf out = Eigen::MatrixXf::Ones(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setOnes();
 	return new Variable(out);
 }
 
 Variable* Random::operator()(int rows, int cols) {
-	Eigen::MatrixXf out = Eigen::MatrixXf::Random(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setRandom();
 	return new Variable(out);
 }
 
 Variable* Random::operator()(const Shape& shape) {
 	int rows = shape.data[0];
 	int cols = shape.data[1];
-	Eigen::MatrixXf out = Eigen::MatrixXf::Random(rows, cols);
+	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+	out->setRandom();
 	return new Variable(out);
 }
 

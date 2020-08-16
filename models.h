@@ -1,15 +1,16 @@
 #pragma once
-#include "core.h"
+#include "nn/core.h"
 
 
 class Base {
 public:
 	Base();
-	virtual Variable* forward(Variable* x, bool is_training = true) = 0;
+	virtual Variable* forward(Variable* x) = 0;
 	void train();
 	void eval();
 protected:
-	bool is_training;
+	vector<Variable*> variables;
+	vector<Variable*> trainable_variables;
 };
 
 
@@ -17,12 +18,9 @@ class Module : public Base {
 public:
 	Module();
 	Variable* operator()(Variable* x);
-	vector<Variable*>& parameters();
+	vector<Variable*>* parameters();
 
 
 protected:
-	vector<Variable*> variables;
-	vector<Variable*> trainable_variables;
-
 	void collect_variables(Variable* x);
 };

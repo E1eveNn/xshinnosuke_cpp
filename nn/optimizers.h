@@ -3,7 +3,7 @@
 
 class Optimizer {
 public:
-	vector<Variable> variables;
+	vector<Variable*>* variables;
 	float lr;
 	long long iterations;
 	void zero_grad();
@@ -13,6 +13,7 @@ public:
 
 class SGD :public Optimizer {
 public:
-	SGD(vector<Variable>& variables, float lr);
+	SGD();
+	SGD(vector<Variable*>* variables, float lr=0.1);
 	virtual void step();
 };

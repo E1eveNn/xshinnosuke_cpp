@@ -1,13 +1,14 @@
 #pragma once
-#include "core.h"
-#include "activators.h"
+
+#include<Eigen/Dense>
 #include<unordered_set>
+#include<string>
 #include <cstring>
 #include<cmath>
+using namespace std;
 
 
-void initialize_variables_grad(const initializer_list<Variable*>& l, bool is_training);
-Eigen::MatrixXf& mat_log(Eigen::MatrixXf& mat);
+Eigen::MatrixXf mat_log(Eigen::MatrixXf& mat);
+Eigen::MatrixXf* generate_matrix_pointer(int rows, int cols, 
+	string type = "random");
 
-template <class T>
-vector<Variable*> topological_sort(T* inputs, T* outputs);
