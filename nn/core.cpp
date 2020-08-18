@@ -77,7 +77,7 @@ void GlobalGraph::reset_graph() {
 	GlobalGraph::OUTPUTS = NULL;
 }
 
-Variable::Variable(Eigen::MatrixXf* data, const vector<Variable*>& in_bounds,
+Variable::Variable(MatrixType* data, const vector<Variable*>& in_bounds,
 	const vector<Variable*>& out_bounds, const string& name,
 	bool requires_grad) {
 	this->in_bounds = in_bounds;
@@ -88,7 +88,21 @@ Variable::Variable(Eigen::MatrixXf* data, const vector<Variable*>& in_bounds,
 	this->shape = Shape({ data->rows(), data->cols() });
 	this->retain = false;
 	this->grad_fn = NULL;
+	this->data_delete_flag = false;
 }
+
+//Variable::Variable(BlockType* data, const vector<Variable*>& in_bounds,
+//	const vector<Variable*>& out_bounds, const string& name,
+//	bool requires_grad) {
+//	this->in_bounds = in_bounds;
+//	this->out_bounds = out_bounds;
+//	this->name = name;
+//	this->requires_grad = requires_grad;
+//	decltype(data) data = data;
+//	this->shape = Shape({ data->rows(), data->cols() });
+//	this->retain = false;
+//	this->grad_fn = NULL;
+//}
 
 
 Variable::Variable(const Variable& v) {
@@ -99,6 +113,7 @@ Variable::Variable(const Variable& v) {
 	this->grad = v.grad;
 }
 
+
 Variable::~Variable() {
 	if (this->data != NULL) {
 		delete this->data;
@@ -108,6 +123,7 @@ Variable::~Variable() {
 		delete this->grad;
 		this->grad = NULL;
 	}
+
 
 	/*for (auto in_bound = this->in_bounds.begin(); 
 		in_bound != this->in_bounds.end();
@@ -161,13 +177,17 @@ void Variable::backward(){
 		cout << "can't solve grad on " << this << endl;
 		return;
 	}
-	if (this->data->size() != 1) {
-		cout << "grad can be implicitly created only for scalar outputs" << endl;
-		return;
+	if (this->data->size() == 1) {
+		if (this->grad == NULL) {
+			Eigen::MatrixXf* constant_one = new Eigen::MatrixXf(1, 1);
+			constant_one->setOnes();
+			this->grad = constant_one;
+		}
+		else {
+			cout << "grad can be implicitly created only for scalar outputs" << endl;
+			return;
+		}
 	}
-	Eigen::MatrixXf* constant_one = new Eigen::MatrixXf(1, 1);
-	constant_one->setOnes();
-	this->grad = constant_one;
 	if (GlobalGraph::OUTPUTS == NULL)
 		GlobalGraph::OUTPUTS = this;
 
@@ -196,6 +216,14 @@ void Variable::backward(){
 	}
 }
 
+void Variable::backward(Eigen::MatrixXf* gradients) {
+	if (gradients->rows() != this->data->rows() || gradients->cols() !=
+		this->data->cols()) {
+		return;
+	}
+	this->grad = gradients;
+	this->backward();
+}
 
 void Variable::retain_grad() {
 	this->retain = true;
@@ -214,28 +242,66 @@ void Variable::zero_grad() {
 }
 
 
-char* Variable::sliceString(const char* origin, int sp, int ep) {
-	if (ep == -1) {
-		ep = strlen(origin);
-	}
-	if (ep > 0 && ep > sp) {
-		int n = ep - sp;
-		char* ret = new char[n + 1];
-		for (int i = sp; i < ep; ++i)
-			ret[i - sp] = origin[i];
-		ret[n] = '\0';
-		return ret;
-	}
-
-	return const_cast<char*>(origin);
-}
-
 void Variable::set_grad_fn_name(const string& name) {
 	this->grad_fn_name = name;
 }
 
-int Variable::size() {
-	return this->shape.size;
+Shape& Variable::size() {
+	return this->shape;
+}
+
+int Variable::size(int index) {
+	return this->shape[index];
+}
+
+void Variable::set_block(int i, int j, int h, int w, Variable* block) {
+	this->data->block(i, j, h, w) = *(block->data);
+}
+
+
+// ############################### Layer
+
+Layer::~Layer() {
+	if (this->input_data != NULL && !this->input_data->data_delete_flag) {
+		delete this->input_data;
+	}
+	this->input_data = NULL;
+	if (this->data != NULL && !this->data->data_delete_flag) {
+		delete this->data;
+	}
+	this->data = NULL;
+}
+
+string& Layer::get_className() {
+	return this->className;
+}
+
+Layer* Layer::operator()(Layer* inbound) {
+	this->input_shape = inbound->shape;
+	this->shape = this->compute_output_shape(inbound->shape);
+	this->in_bounds.push_back(inbound);
+	inbound->out_bounds.push_back(this);
+	return this;
+}
+
+void Layer::connect(Layer* inbound) {
+	if (inbound == NULL) {
+		if (!this->input_shape.initialize_flag) {
+			throw "must specify input_shape";
+		}
+	}
+	else {
+		this->input_shape = inbound->shape;
+	}
+	this->shape = this->compute_output_shape(this->input_shape);
+	if (inbound != NULL) {
+		this->in_bounds.push_back(inbound);
+		inbound->out_bounds.push_back(this);
+	}
+}
+
+void Layer::initial_params(Shape& input_shape) {
+
 }
 
 void Layer::initial_params() {
@@ -249,7 +315,7 @@ Shape Layer::compute_output_shape(Shape& input_shape) {
 int Layer::params_count() {
 	int total_params = 0;
 	for (auto v = this->variables.begin(); v != this->variables.end(); ++v) {
-		total_params += (*v)->size();
+		total_params += (*v)->data->size();
 	}
 	return total_params;
 }

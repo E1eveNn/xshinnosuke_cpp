@@ -2,14 +2,14 @@
 
 
 void Optimizer::zero_grad() {
-	for (vector<Variable*>::iterator it = this->variables->begin(); 
+	for (unordered_set<Variable*>::iterator it = this->variables->begin();
 		it != this->variables->end(); ++it) {
 		(*it)->zero_grad();
 	}
 }
 
 
-SGD::SGD(vector<Variable*>* variables, float lr) {
+SGD::SGD(unordered_set<Variable*>* variables, float lr) {
 	this->variables = variables;
 	this->lr = lr;
 	this->iterations = 0;
@@ -21,7 +21,7 @@ SGD::SGD() {
 
 
 void SGD::step() {
-	for (vector<Variable*>::iterator it = this->variables->begin();
+	for (unordered_set<Variable*>::iterator it = this->variables->begin();
 		it != this->variables->end(); ++it) {
 		if ((*it)->requires_grad) {
 			/*Eigen::MatrixXf lr_mat = 
@@ -31,4 +31,19 @@ void SGD::step() {
 		}
 	}
 	this->iterations++;
+}
+
+
+Optimizer* get_optimizer(const string& name,
+	unordered_set<Variable*>& variables) {
+	if (name == "sgd" || name == "SGD") {
+		return new SGD(&variables);
+	}
+}
+
+Optimizer* get_optimizer(const string& name,
+	unordered_set<Variable*>& variables, float lr) {
+	if (name == "sgd" || name == "SGD") {
+		return new SGD(&variables, lr);
+	}
 }

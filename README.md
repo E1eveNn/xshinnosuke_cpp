@@ -11,7 +11,7 @@ For more *functional* or *Layers* details, such as Conv2D, max_pool2d, embedding
 
 
 
-Here are some features of Shinnosuke:
+Here are some features of XShinnosuke:
 
 1. Based on **Eigen** and native to **C++**.
 
@@ -29,13 +29,16 @@ Here are some features of Shinnosuke:
 
 ## Getting started
 
+### Dynamic Graph
+
 ```c++
+#pragma once
 #include<iostream>
-#include "layers/linear.h"
-#include "models.h"
-#include "nn/functional.h"
-#include "nn/objectives.h"
-#include "nn/optimizers.h"
+#include "../layers/linear.h"
+#include "../models.h"
+#include "../nn/functional.h"
+#include "../utils/data.h"
+#include<ctime>
 #include<vector>
 using namespace std;
 
@@ -87,14 +90,11 @@ public:
 ```
 
 ```c++
-int main() {
+void run_dynamic() {
     // random generate training datas
     // generate training input datas
-	Eigen::MatrixXf x = Eigen::MatrixXf::Random(10, 10);
-	Variable* inputs = new Variable(&x);
-	inputs->requires_grad_(true);
-    // generate training input targets
-	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(10, 1);
+	Eigen::MatrixXf x = Eigen::MatrixXf::Random(100, 10);
+	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(100, 1);
 	for (int i = 0; i < 10; ++i) {
 		for (int j = 0; j < 1; ++j) {
 			float n = (rand() % 10) / 10;
@@ -103,47 +103,91 @@ int main() {
 			}
 		}
 	}
-	Variable* target = new Variable(&y);
-	
-    // instantiate your diy network
+    // batch_size
+	int BATCH_SIZE = 20;
+    // xshinnosuke_cpp provides DataLoader for batch training/inference
+	Dataset train_set = Dataset(x, y);
+	DataLoader train_loader = DataLoader(train_set, BATCH_SIZE);
+	// instantiate your diy network
 	myNet net = myNet(1);
-    // declare criterion
+     // declare criterion
 	Objective* criterion = new BinaryCrossEntropy();
     // declare optimizer, notice pass network's parameters to optimizer
 	Optimizer* optimizer = new SGD(net.parameters());
-	// define training EPOCH
+
+	clock_t startTime, endTime;
+	startTime = clock();
 	int EPOCH = 10;
     // define training flow
-	for (int epoch = 0; epoch < EPOCH; ++epoch) {
-        // at every epoch zero_grad's optimizer's trainable_variables' grad.
-		optimizer->zero_grad();
-        // forward
-		Variable* out = net(inputs);
-        // calculate loss
-		Variable* loss = (*criterion)(out, target);
-        // calculate accuracy
-		float acc = criterion->acc(out, target);
-		cout << "iter: " << epoch <<" loss: " << loss->item() << " acc: " << 
-			criterion->acc(out, target) << endl;
-        // backward
-		loss->backward();
-        // update parameters
-		optimizer->step();
+    for (int epoch = 0; epoch < EPOCH; ++epoch) {
+		for (auto it = train_loader.begin(); it != train_loader.end(); ++it) {
+			Variable *inputs = (*it).first, *target = (*it).second;
+            // at every epoch zero_grad's optimizer's trainable_variables' grad.
+			optimizer->zero_grad();
+            // forward
+			Variable* out = net(inputs);
+            // calculate loss
+			Variable* loss = (*criterion)(out, target);
+			float acc = criterion->calc_acc(out, target);
+			cout << "iter: " << epoch << " loss: " << loss->item() << " acc: " <<
+				acc << endl;
+            // backward
+			loss->backward();
+            // update parameters
+			optimizer->step();
+		}
 	}
-}
-
-// result
-iter: 0 loss: 1.25291 acc: 0.2
-iter: 1 loss: 1.00379 acc: 0.2
-iter: 2 loss: 0.702379 acc: 0.4
-iter: 3 loss: 0.484556 acc: 0.7
-iter: 4 loss: 0.347854 acc: 1
-iter: 5 loss: 0.264427 acc: 1
-iter: 6 loss: 0.201489 acc: 1
-iter: 7 loss: 0.138188 acc: 1
-iter: 8 loss: 0.101462 acc: 1
-iter: 9 loss: 0.0720882 acc: 1
+	endTime = clock();
+	cout << "The run time is: " <<
+		(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
 ```
+
+
+
+### Static Graph
+
+```c++
+#pragma once
+#include "../layers/base.h"
+#include "../layers/linear.h"
+#include "../layers/activators.h"
+#include "../models.h"
+#include "../utils/shape.h"
+#include<ctime>
+
+void run_static() {
+	int n_classes = 1;
+	Eigen::MatrixXf x = Eigen::MatrixXf::Random(100, 10);
+	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(100, 1);
+	for (int i = 0; i < 10; ++i) {
+		for (int j = 0; j < 1; ++j) {
+			float n = (rand() % 10) / 10;
+			if (n >= 0.5) {
+				y(i, j) = 1;
+			}
+		}
+	}
+	Sequential model = Sequential();
+    // The first layer in Sequential must be specify input_shape(no need specify batch_size).
+	model.add(new Linear(10, "null", false, "random", "zeros", Shape({ 10 })));
+	model.add(new ReLU());
+	model.add(new Linear(5));
+	model.add(new ReLU());
+	model.add(new Linear(n_classes));
+	model.add(new Sigmoid());
+	model.compile("sgd", "bce");
+	clock_t startTime, endTime;
+	startTime = clock();
+	int BATCH_SIZE = 20;
+	int EPOCH = 10;
+	model.fit(&x, &y, BATCH_SIZE, EPOCH);
+	endTime = clock();
+	cout << "The run time is: " <<
+		(double)(endTime - startTime) / CLOCKS_PER_SEC << "s" << endl;
+}
+```
+
+
 
 ## Installation
 
@@ -160,6 +204,6 @@ iter: 9 loss: 0.0720882 acc: 1
 ## Demo
 
 ```c++
-run test.cpp
+run demo.cpp
 ```
 

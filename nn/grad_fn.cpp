@@ -1,5 +1,16 @@
 #include "grad_fn.h"
 
+
+void AddBackward(Variable* outputs) {
+	for (auto v = outputs->in_bounds.begin(); v != outputs->in_bounds.end();
+		++v) {
+		if ((*v)->requires_grad) {
+			*((*v)->grad) += *(outputs->grad);
+		}
+	}
+}
+
+
 void DenseBackward(Variable* outputs) {
 	Variable* inputs = outputs->in_bounds[0];
 	Variable* weight = outputs->get_parameters()[0];

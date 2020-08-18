@@ -28,12 +28,12 @@ Activation::Activation(const vector<Layer*>& in_bounds, const vector<Layer*>& ou
 	this->name = name;
 }
 
-Variable* Activation::operator()(Variable* inbound, bool is_training) {
-	return this->activator->forward(is_training);
+Variable* Activation::operator()(Variable* inbound) {
+	return this->activator->forward();
 }
 
-Variable* Activation::forward(bool is_training) {
-	this->data = this->activator->forward(is_training);
+Variable* Activation::forward() {
+	this->data = this->activator->forward();
 	this->feed_variable_to_next_layer(this->data);
 	return this->data;
 }
@@ -47,22 +47,46 @@ ReLU::ReLU(bool inplace,
 	: Activation(in_bounds, out_bounds, input_data, data, input_shape, shape,
 		variables, name) {
 	this->inplace = inplace;
+	this->className = "ReLU";
 }
 
 
-Variable* ReLU::forward(bool is_training) {
-	this->data = relu(this->input_data, this->inplace, is_training);
+Variable* ReLU::forward() {
+	this->data = relu(this->input_data, this->inplace, GlobalGraph::IS_TRAINING);
 	this->feed_variable_to_next_layer(this->data);
 	return this->data;
 }
 
-Variable* ReLU::operator()(Variable* inbound, bool is_training) {
-	return relu(inbound, this->inplace, is_training);
+Variable* ReLU::operator()(Variable* inbound) {
+	return relu(inbound, this->inplace, GlobalGraph::IS_TRAINING);
+}
+
+
+Sigmoid::Sigmoid(const vector<Layer*>& in_bounds, const vector<Layer*>& out_bounds,
+	Variable* input_data, Variable* data, const Shape& input_shape,
+	const Shape& shape, const vector<Variable*>& variables, const string& name)
+	: Activation(in_bounds, out_bounds, input_data, data, input_shape, shape,
+		variables, name) {
+	this->className = "Sigmoid";
+}
+
+
+Variable* Sigmoid::forward() {
+	this->data = sigmoid(this->input_data, GlobalGraph::IS_TRAINING);
+	this->feed_variable_to_next_layer(this->data);
+	return this->data;
+}
+
+Variable* Sigmoid::operator()(Variable* inbound) {
+	return sigmoid(inbound, GlobalGraph::IS_TRAINING);
 }
 
 
 Activation* get_activator(const string& name) {
 	if (name == "relu") {
 		return new ReLU();
+	}
+	else if(name == "sigmoid") {
+		return new Sigmoid();
 	}
 }

@@ -12,14 +12,7 @@ Variable* Objective::operator()(Variable* y_pred, Variable* y_true) {
 
 Variable* BinaryCrossEntropy::forward(Variable* y_pred, Variable* y_true) {
 	y_pred->retain_grad();
-	int r = y_true->data->rows();
-	int c = y_true->data->cols();
-	Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(r, c);
-	Eigen::MatrixXf onesMinusYpred = ones - *(y_pred->data);
-
-
-	float loss_val = -((*(y_true->data)).array() * (mat_log(*(y_pred->data)).array()) + 
-		(ones - *(y_true->data)).array() * mat_log(onesMinusYpred).array()).sum() / r;
+	float loss_val = this->calc_loss(y_pred, y_true);
 	Eigen::MatrixXf* loss_mat = new Eigen::MatrixXf(1, 1);
 	loss_mat->setConstant(loss_val);
 	vector<Variable*> in_bounds{ y_pred, y_true };
@@ -33,7 +26,17 @@ Variable* BinaryCrossEntropy::forward(Variable* y_pred, Variable* y_true) {
 	return loss;
 }
 
-float BinaryCrossEntropy::acc(Variable* y_pred, Variable* y_true) {
+float BinaryCrossEntropy::calc_loss(Variable* y_pred, Variable* y_true) {
+	int r = y_true->data->rows();
+	int c = y_true->data->cols();
+	Eigen::MatrixXf ones = Eigen::MatrixXf::Ones(r, c);
+	Eigen::MatrixXf onesMinusYpred = ones - *(y_pred->data);
+	float loss_val = -((*(y_true->data)).array() * (mat_log(*(y_pred->data)).array()) +
+		(ones - *(y_true->data)).array() * mat_log(onesMinusYpred).array()).sum() / r;
+	return loss_val;
+}
+
+float BinaryCrossEntropy::calc_acc(Variable* y_pred, Variable* y_true) {
 	int r = y_true->data->rows();
 	int c = y_true->data->cols();
 	float total_correct = 0;
@@ -48,4 +51,12 @@ float BinaryCrossEntropy::acc(Variable* y_pred, Variable* y_true) {
 		}
 	}
 	return total_correct / (r * c);
+}
+
+
+
+Objective* get_objectives(const string& name) {
+	if (name == "bce" || name == "BinaryCrossEntropy") {
+		return new BinaryCrossEntropy();
+	}
 }

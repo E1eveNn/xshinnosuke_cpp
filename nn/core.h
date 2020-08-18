@@ -4,12 +4,29 @@
 #include<iostream>
 #include<string>
 #include<unordered_map>
+#include<unordered_set>
+#include<algorithm>
 #include "../utils/shape.h"
+#include "../utils/toolkit.h"
 using namespace std;
 
+#ifndef BlockType
+// #define BlockType Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, 0>;
+typedef Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, 0> BlockType;
+#endif
+
+#ifndef MatrixType
+//#define MatrixType Eigen::MatrixXf;
+typedef Eigen::MatrixXf MatrixType;
+#endif
+
+//typedef Eigen::Block<Eigen::Matrix<float, -1, -1, 0, -1, -1>, -1, -1, 0> BlockType;
+//typedef Eigen::MatrixXf MatrixType;
 typedef Eigen::Matrix<int, 1, 1> Vector1I;
 typedef Eigen::Matrix<float, 1, 1> Vector1f;
 typedef Eigen::Matrix<double, 1, 1> Vector1d;
+
+
 
 
 // Tensor Class
@@ -17,16 +34,19 @@ class Variable {
 	// overload cout
 	friend ostream& operator<<(ostream& os, Variable* n) {
 		string requires_grad = n->requires_grad == 0 ? "false" : "true";
-		cout << n->sliceString(typeid(n).name(), 6) << '('
+		cout << sliceString(typeid(n).name(), 6) << '('
 			<< *(n->data) << ", requires_grad=" <<
 			requires_grad << ", grad_fn=<" << n->grad_fn_name << ">)";
 		return os;
 	}
 
 public:
-	Variable(Eigen::MatrixXf* data, const vector<Variable*>& in_bounds = vector<Variable*>(),
+	Variable(MatrixType* data, const vector<Variable*>& in_bounds = vector<Variable*>(),
 		const vector<Variable*>& out_bounds = vector<Variable*>(),
 		const string& name = "", bool requires_grad = false);
+	/*Variable(BlockType* data, const vector<Variable*>& in_bounds = vector<Variable*>(),
+		const vector<Variable*>& out_bounds = vector<Variable*>(),
+		const string& name = "", bool requires_grad = false);*/
 
 	Variable(const Variable& v);
 	~Variable();
@@ -63,17 +83,21 @@ public:
 	void backward(Eigen::MatrixXf* gradients);
 	void backward();
 
-	int size();
+	Shape& size();
+	int size(int index);
 	void zero_grad();
 	void set_grad_fn_name(const string& name);
+
+	void set_block(int i, int j, int h, int w, Variable* block);
 	// overload operator
-	//Variable& operator + (const Variable& other);
+	// void operator delete(void* p);
+	Variable* operator + (Variable* other);
 	bool retain;
+	bool data_delete_flag;
 protected:
 	unordered_map<string, float> cache;
 	string grad_fn_name;
 	vector<Variable*> parameters;
-	char* sliceString(const char* origin, int sp, int ep = -1);
 };
 
 
@@ -99,15 +123,22 @@ public:
 	vector<Layer*> out_bounds;
 	vector<Variable*> variables;
 
+	~Layer();
+	virtual void initial_params(Shape& input_shape);
 	virtual void initial_params();
 	virtual Shape compute_output_shape(Shape& input_shape);
-	int params_count();
 	virtual Variable* forward() = 0;
 	virtual void backward();
-	//virtual Layer* operator()(Layer* inbound);
+	virtual Layer* operator()(Layer* inbound);
 	virtual Variable* operator()(Variable* inbound) = 0;
+
+	int params_count();
+	void connect(Layer* inbound = NULL);
+
+	string& get_className();
 protected:
 	void feed_variable_to_next_layer(Variable* data);
+	string className;
 };
 
 namespace GlobalGraph {
@@ -119,6 +150,7 @@ namespace GlobalGraph {
 
 	template <class T>
 	vector<T*> topological_sort(T* inputs, T* outputs);
-
 	void reset_graph();
 };
+
+

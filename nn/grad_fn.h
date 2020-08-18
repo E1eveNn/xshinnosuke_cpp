@@ -1,6 +1,10 @@
 #pragma once
 #include "core.h"
 
+// math operations
+void AddBackward(Variable* outputs);
+
+
 
 void DenseBackward(Variable* outputs);
 void ReLUBackward(Variable* outputs);

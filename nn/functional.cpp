@@ -1,5 +1,46 @@
 #include "functional.h"
 
+// math operations
+Variable* Variable::operator + (Variable* other) {
+	if (GlobalGraph::INPUTS == NULL) {
+		GlobalGraph::INPUTS = this;
+	}
+	return badd({ this, other }, GlobalGraph::IS_TRAINING);
+}
+
+
+Variable* badd(const initializer_list<Variable*>& l, bool is_training, 
+	const string& name) {
+	int r = (*(l.begin()))->data->rows();
+	int c = (*(l.begin()))->data->cols();
+	Eigen::MatrixXf* data = new Eigen::MatrixXf(r, c);
+	data->setZero();
+	vector<Variable*> in_bounds;
+	bool requires_grad = false;
+	for (auto v = l.begin(); v != l.end(); ++v) {
+		if ((*v)->data->rows() != r || (*v)->data->cols() != c) {
+			throw "add() requires all the variables hold the same shape!";
+		}
+		*data += *((*v)->data);
+		in_bounds.push_back(*v);
+		requires_grad = requires_grad | (*v)->requires_grad;
+	}
+	vector<Variable*> out_bounds;
+	Variable* outputs = new Variable(data, in_bounds, out_bounds, name,
+		requires_grad);
+	for (auto v = l.begin(); v != l.end(); ++v) {
+		(*v)->out_bounds.push_back(outputs);
+		if (is_training && outputs->requires_grad) {
+			outputs->grad_fn = AddBackward;
+			outputs->set_grad_fn_name("AddBackward");
+		}
+	}
+	initialize_variables_grad(l, is_training);
+	return outputs;
+}
+
+
+
 Variable* dense(Variable* inputs, Variable* weight, bool is_training, 
 	const string& name) {
 	if (GlobalGraph::INPUTS == NULL) {

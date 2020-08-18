@@ -19,3 +19,5 @@ Variable* Input::forward(bool is_training) {
 	this->feed_variable_to_next_layer(this->data);
 	return this->data;
 }
+
+

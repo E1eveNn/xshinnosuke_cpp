@@ -15,7 +15,7 @@ public:
 			if(t.ndim == 1 or i != t.ndim - 1)
 				os << ',';
 		}
-		os << ')' << endl;
+		os << ')';
 		return os;
 	}
 	Shape();
@@ -26,12 +26,12 @@ public:
 	bool operator==(const Shape& other);
 	Shape operator+(int a);
 	int operator[](int dim);
-
+	Shape slice(int sp, int ep = -1);
 	// record data size
 	int size;
 
 	vector<int> data;
 	// record how many dimensions
 	int ndim;
-
+	bool initialize_flag;
 };

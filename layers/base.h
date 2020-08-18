@@ -1,5 +1,5 @@
 #pragma once
-#include "core.h"
+#include "../nn/core.h"
 
 
 class Input :public Layer {

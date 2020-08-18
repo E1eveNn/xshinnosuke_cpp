@@ -9,12 +9,14 @@ Shape::Shape(const initializer_list<int>& l) {
 		this->ndim++;
 	}
 	this->ndim = this->data.size();
+	this->initialize_flag = true;
 }
 
 
 Shape::Shape() {
 	this->size = 0;
 	this->ndim = 0;
+	this->initialize_flag = false;
 }
 
 //Shape::Shape(const Shape& s) {
@@ -23,6 +25,9 @@ Shape::Shape() {
 //	this->ndim = s.ndim;
 //}
 
+Shape Shape::slice(int sp, int ep) {
+	return Shape({ this->data[sp] });
+}
 
 bool Shape::operator==(const Shape& other) {
 	if (this->ndim != other.ndim || this->size != other.size)

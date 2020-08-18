@@ -4,6 +4,11 @@
 using namespace std;
 
 
+// math operations
+// add
+Variable* badd(const initializer_list<Variable*>& l, bool is_training = true,
+	const string& name = "");
+
 // ######################## fully connected
 // without bias
 Variable* dense(Variable* inputs, Variable* weight, bool is_training = true,
