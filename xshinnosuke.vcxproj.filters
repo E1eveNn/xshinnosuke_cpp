@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="models.cpp" />
+    <ClCompile Include="layers\activators.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="layers\base.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\core.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\functional.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\grad_fn.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\initializers.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\objectives.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="nn\optimizers.cpp">
+      <Filter>nn</Filter>
+    </ClCompile>
+    <ClCompile Include="layers\linear.cpp">
+      <Filter>layers</Filter>
+    </ClCompile>
+    <ClCompile Include="demo.cpp" />
+    <ClCompile Include="utils\toolkit.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\shape.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="utils\data.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="models.h" />
+    <ClInclude Include="layers\activators.h">
+      <Filter>layers</Filter>
+    </ClInclude>
+    <ClInclude Include="layers\base.h">
+      <Filter>layers</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\core.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\functional.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\grad_fn.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\initializers.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\objectives.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="nn\optimizers.h">
+      <Filter>nn</Filter>
+    </ClInclude>
+    <ClInclude Include="layers\linear.h">
+      <Filter>layers</Filter>
+    </ClInclude>
+    <ClInclude Include="test\dynamic_graph.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="test\static_graph.h">
+      <Filter>test</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\toolkit.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\shape.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\data.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="layers">
+      <UniqueIdentifier>{09675b91-01bb-4ae5-ae73-411dc64546d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="nn">
+      <UniqueIdentifier>{0b482c2e-a20d-40f9-aab0-77d947140e69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{b9bc569d-a3a3-47cd-b477-173c93bd4103}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{01eef2c7-3c8f-404a-9978-6e0f4f4f2d82}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
