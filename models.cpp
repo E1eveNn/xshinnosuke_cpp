@@ -96,6 +96,23 @@ void _Model::backward(Variable* loss) {
 	}
 }
 
+
+void _Model::compile(Optimizer* optimizer, Objective* loss,
+	float lr) {
+	this->generate_graph();
+	this->loss = loss;
+	this->optimizer = optimizer;
+}
+
+
+void _Model::compile(const string& optimizer, const string& loss,
+	float lr) {
+	this->generate_graph();
+	this->loss = get_objectives(loss);
+	this->optimizer = get_optimizer(optimizer, this->variables, lr);
+}
+
+
 Sequential::Sequential() {
 	this->graph = vector<Layer*>();
 }
@@ -109,38 +126,8 @@ void Sequential::add(Layer* layer) {
 	this->graph.push_back(layer);
 }
 
-void Sequential::compile(Optimizer* optimizer, Objective* loss,
-	float lr) {
-	if (this->graph.empty()) {
-		throw "Graph is empty!";
-	}
-	unordered_map<string, int> name_dict;
-	Layer* prev_layer = NULL;
-	for (auto layer = this->graph.begin(); layer != this->graph.end(); ++layer) {
-		(*layer)->connect(prev_layer);
-		(*layer)->initial_params();
-		if ((*layer)->name == "") {
-			string className = (*layer)->get_className();
-			for (int i = 0; i < className.size(); ++i) {
-				className[i] = tolower(className[i]);
-			}
-			(*layer)->name = className +
-				to_string(name_dict[(*layer)->get_className()]);
-			name_dict[(*layer)->get_className()]++;
-		}
-		prev_layer = *layer;
-		for (auto v = (*layer)->variables.begin(); 
-			v != (*layer)->variables.end(); ++v) {
-			this->variables.insert(*v);
-		}
-	}
-	this->loss = loss;
-	this->optimizer = optimizer;
-}
 
-
-void Sequential::compile(const string& optimizer, const string& loss,
-	float lr) {
+void Sequential::generate_graph() {
 	if (this->graph.empty()) {
 		throw "Graph is empty!";
 	}
@@ -164,8 +151,6 @@ void Sequential::compile(const string& optimizer, const string& loss,
 			this->variables.insert(*v);
 		}
 	}
-	this->loss = get_objectives(loss);
-	this->optimizer = get_optimizer(optimizer, this->variables, lr);
 }
 
 
@@ -188,6 +173,37 @@ void Sequential::pop(int index) {
 	this->graph.erase(this->graph.begin() + index);
 }
 
+
+Model::Model(Layer* inputs, Layer* outputs) {
+	this->inputs = inputs;
+	this->outputs = outputs;
+}
+
+void Model::generate_graph() {
+	if (this->inputs == NULL || this->outputs == NULL) {
+		throw "inputs or/and outputs can not be NULL!";
+	}
+	this->graph = GlobalGraph::topological_sort(this->inputs, this->outputs);
+	for (auto layer = this->graph.begin(); layer != this->graph.end(); ++layer) {
+		(*layer)->initial_params();
+		for (auto v = (*layer)->variables.begin();
+			v != (*layer)->variables.end(); ++v) {
+			this->variables.insert(*v);
+		}
+	}
+}
+
+
+Variable* Model::forward(Variable* x) {
+	this->inputs->input_data = x;
+	Variable* out = NULL;
+	for (auto layer = this->graph.begin(); layer != this->graph.end(); ++layer) {
+		out = (*layer)->forward();
+	}
+	return out;
+}
+
+// ########################## Module
 
 Module::Module() {
 

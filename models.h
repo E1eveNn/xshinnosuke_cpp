@@ -38,10 +38,11 @@ public:
 	Objective* loss;
 	vector<Layer*> graph;
 
-	virtual void compile(Optimizer* optimizer, Objective* loss, 
-		float lr = 0.1) = 0;
-	virtual void compile(const string& optimizer, const string& loss,
-		float lr = 0.1) = 0;
+	void compile(Optimizer* optimizer, Objective* loss, 
+		float lr = 0.1);
+	void compile(const string& optimizer, const string& loss,
+		float lr = 0.1);
+
 	virtual Variable* forward(Variable* x) = 0;
 
 	void fit(Eigen::MatrixXf* x, Eigen::MatrixXf* y, int batch_size = 0,
@@ -51,7 +52,8 @@ public:
 	pair<float, float> evaluate(Eigen::MatrixXf* x, Eigen::MatrixXf* y, 
 		int batch_size = 0);
 	Variable* predict(Eigen::MatrixXf* x, int batch_size = 0);
-
+protected:
+	virtual void generate_graph() = 0;
 };
 
 class Sequential :public _Model {
@@ -131,10 +133,21 @@ public:
 	Sequential();
 	Sequential(const vector<Layer*>& graph);
 	void add(Layer* layer);
-	virtual void compile(Optimizer* optimizer, Objective* loss,
-		float lr = 0.1);
-	virtual void compile(const string& optimizer, const string& loss,
-		float lr = 0.1);
 	virtual Variable* forward(Variable* x);
 	void pop(int index);
+
+protected:
+	virtual void generate_graph();
+};
+
+
+class Model :public _Model {
+public:
+	Model(Layer* inputs = NULL, Layer* outputs = NULL);
+	virtual Variable* forward(Variable* x);
+	Layer* inputs;
+	Layer* outputs;
+
+protected:
+	virtual void generate_graph();
 };

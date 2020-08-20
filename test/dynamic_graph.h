@@ -52,9 +52,11 @@ public:
 
 
 void run_dynamic() {
-	Eigen::MatrixXf x = Eigen::MatrixXf::Random(100, 10);
-	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(100, 1);
-	for (int i = 0; i < 10; ++i) {
+	int samples = 1000;
+	int features = 30;
+	Eigen::MatrixXf x = Eigen::MatrixXf::Random(samples, features);
+	Eigen::MatrixXf y = Eigen::MatrixXf::Zero(samples, 1);
+	for (int i = 0; i < samples; ++i) {
 		for (int j = 0; j < 1; ++j) {
 			float n = (rand() % 10) / 10;
 			if (n >= 0.5) {
@@ -62,7 +64,7 @@ void run_dynamic() {
 			}
 		}
 	}
-	int BATCH_SIZE = 20;
+	int BATCH_SIZE = 100;
 	Dataset train_set = Dataset(x, y);
 	DataLoader train_loader = DataLoader(train_set, BATCH_SIZE);
 
@@ -72,7 +74,7 @@ void run_dynamic() {
 
 	clock_t startTime, endTime;
 	startTime = clock();
-	int EPOCH = 10;
+	int EPOCH = 20;
 	for (int epoch = 0; epoch < EPOCH; ++epoch) {
 		for (auto it = train_loader.begin(); it != train_loader.end(); ++it) {
 			Variable *inputs = (*it).first, *target = (*it).second;

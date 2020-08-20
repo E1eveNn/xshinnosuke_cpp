@@ -16,6 +16,7 @@ vector<T*> GlobalGraph::topological_sort(T* inputs, T* outputs) {
 	vector<T*> outs{ outputs };
 	vector<T*> ins{ inputs };
 
+	unordered_map<string, int> name_dict;
 	unordered_map<T*, unordered_map<string, unordered_set<T*>> > G;
 	while (ins.size() > 0)
 	{
@@ -47,6 +48,17 @@ vector<T*> GlobalGraph::topological_sort(T* inputs, T* outputs) {
 		T* n = *(--S.end());
 		S.erase(--S.end());
 		sorted_graph.push_back(n);
+
+		if (n->name == "") {
+			string className = n->get_className();
+			for (int i = 0; i < className.size(); ++i) {
+				className[i] = tolower(className[i]);
+			}
+			n->name = className +
+				to_string(name_dict[n->get_className()]);
+			name_dict[n->get_className()]++;
+		}
+
 		if (std::find(outs.begin(), outs.end(), n) != outs.end()) {
 			continue;
 		}
@@ -89,6 +101,7 @@ Variable::Variable(MatrixType* data, const vector<Variable*>& in_bounds,
 	this->retain = false;
 	this->grad_fn = NULL;
 	this->data_delete_flag = false;
+	this->className = "Variable";
 }
 
 //Variable::Variable(BlockType* data, const vector<Variable*>& in_bounds,
@@ -256,6 +269,10 @@ int Variable::size(int index) {
 
 void Variable::set_block(int i, int j, int h, int w, Variable* block) {
 	this->data->block(i, j, h, w) = *(block->data);
+}
+
+string& Variable::get_className() {
+	return this->className;
 }
 
 

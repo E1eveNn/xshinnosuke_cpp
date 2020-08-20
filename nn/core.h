@@ -89,15 +89,18 @@ public:
 	void set_grad_fn_name(const string& name);
 
 	void set_block(int i, int j, int h, int w, Variable* block);
+
+	string& get_className();
 	// overload operator
-	// void operator delete(void* p);
 	Variable* operator + (Variable* other);
+
 	bool retain;
 	bool data_delete_flag;
 protected:
 	unordered_map<string, float> cache;
 	string grad_fn_name;
 	vector<Variable*> parameters;
+	string className;
 };
 
 

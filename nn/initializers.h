@@ -35,4 +35,9 @@ class Random : public Initializer {
 	virtual Variable* operator()(int rows, int cols);
 };
 
+class Binominal :public Initializer {
+	virtual Variable* operator()(const Shape& shape);
+	virtual Variable* operator()(int rows, int cols);
+};
+
 Initializer* get_initializer(const string& name);

@@ -12,6 +12,7 @@ Input::Input(const Shape& input_shape, const vector<Layer*>& in_bounds,
 	this->data = data;
 	this->variables = variables;
 	this->name = name;
+	this->className = "Input";
 }
 
 Variable* Input::forward(bool is_training) {

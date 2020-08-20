@@ -51,6 +51,36 @@ Variable* Random::operator()(const Shape& shape) {
 	return new Variable(out);
 }
 
+//Variable* Binominal::operator()(int rows, int cols) {
+//	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+//	out->setZero();
+//	for (int i = 0; i < rows; ++i) {
+//		for (int j = 0; j < cols; ++j) {
+//			float n = (rand() % 10) / 10;
+//			if (n >= 0.5) {
+//				(*out)(i, j) = 1;
+//			}
+//		}
+//	}
+//	return new Variable(out);
+//}
+//
+//Variable* Binominal::operator()(const Shape& shape) {
+//	int rows = shape.data[0];
+//	int cols = shape.data[1];
+//	Eigen::MatrixXf* out = new Eigen::MatrixXf(rows, cols);
+//	out->setZero();
+//	for (int i = 0; i < rows; ++i) {
+//		for (int j = 0; j < cols; ++j) {
+//			float n = (rand() % 10) / 10;
+//			if (n >= 0.5) {
+//				(*out)(i, j) = 1;
+//			}
+//		}
+//	}
+//	return new Variable(out);
+//}
+
 
 Initializer* get_initializer(const string& name) {
 	if (name == "zeros") {
